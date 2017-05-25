@@ -19,11 +19,11 @@ Un algoritmo genético puede presentar diversas variaciones, dependiendo de cóm
 	* __Mutación__ modifica al azar parte del cromosoma de los individuos, y permite alcanzar zonas del espacio de búsqueda que no estaban cubiertas por los individuos de la población actual.
 	* __Reemplazo__ una vez aplicados los operadores genéticos, se seleccionan los mejores individuos para conformar la población de la generación siguiente.
 
-#Sudoku
+# Sudoku
 
 Sudoku (en japonés: 数独, sūdoku) es un juego matemático que se publicó por primera vez a finales de la década de 1970 y se popularizó en Japón en 1986, dándose a conocer en el ámbito internacional en 2005 cuando numerosos periódicos empezaron a publicarlo en su sección de pasatiempos. 1 El objetivo del sudoku es rellenar una cuadrícula de 9 × 9 celdas (81 casillas) dividida en subcuadrículas de 3 × 3 (también llamadas "cajas" o "regiones") con las cifras del 1 al 9 partiendo de algunos números ya dispuestos en algunas de las celdas. Aunque se podrían usar colores, letras, figuras, se conviene en usar números para mayor claridad, lo que importa, es que sean nueve elementos diferenciados, que no se deben repetir en una misma fila, columna o subcuadrícula. Un sudoku está bien planteado si la solución es única, algo que el matemático Gary McGuire ha demostrado que no es posible si no hay un mínimo de 17 cifras de pista al principio.2 La solución de un sudoku siempre es un cuadrado latino, aunque el recíproco en general no es cierto ya que el sudoku establece la restricción añadida de que no se puede repetir un mismo número en una subcuadrícula.
 
-##Reglas y terminología
+## Reglas y terminología
 
 El sudoku se presenta normalmente como una tabla de 9× 9, compuesta por subtablas de 3 × 3 denominadas "regiones" (también se le llaman "cajas" o"bloques").
 
