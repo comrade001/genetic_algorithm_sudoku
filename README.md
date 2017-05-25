@@ -31,5 +31,6 @@ Algunas celdas ya contienen números, conocidos como "números dados" (o a veces
 
 Además, cada número de la solución aparece solo una vez en cada una de las tres "direcciones", de ahí el "los números deben estar solos" que evoca el nombre del juego.
 
-Source: [Wikipedia](https://es.wikipedia.org/wiki/Algoritmo_gen%C3%A9tico)
-
+Sources: 
+[Wikipedia Algoritmo Genético](https://es.wikipedia.org/wiki/Algoritmo_gen%C3%A9tico)
+[Wikipedia Sudoku](https://es.wikipedia.org/wiki/Sudoku)
