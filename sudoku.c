@@ -1,7 +1,5 @@
 /*Algoritmo Genetico
-Se busca maximizar la siguiente funcion
-matematica:
-    f(x,y)=50-(x-5)^2-(y-5)^2
+Se busca resolver un sudoku.
 */
 
 #include <stdio.h>
@@ -25,14 +23,14 @@ typedef struct{
 }POBLACION;
 
 /*Variables globales*/
-const unsigned int Numero_de_Genes=30;
+const unsigned int Numero_de_Genes=1;
 const unsigned int Numero_de_Individuos=50;
-const float LimitInf=-5.12;
-const float LimitSup=5.12;
-unsigned int MaximoIteraciones=1000;
+//const float LimitInf=1.0;
+//const float LimitSup=9.0;
+unsigned int MaximoIteraciones=1;
 const float pc=0.8; 
 const float p_muta=0.001;
-unsigned int Genes[30]={[0 ... 29]=20};
+unsigned int Genes[1]={81};
 
 /*Prototipo de funciones*/
 POBLACION* CrearPoblacion(const unsigned int Numero_de_Genes, const unsigned int Numero_de_Individuos);
@@ -52,33 +50,34 @@ int main()
 	POBLACION *pPob;
 	unsigned int padre, madre, It=0;
 	/*Se inicializa semilla para generar numeros aleatorios*/
-	srand(time(NULL));
+	//srand(time(NULL));
 
 	/*Crear memoria para la poblacion*/
 	pPob=CrearPoblacion(Numero_de_Genes, Numero_de_Individuos);
 	InicializarPoblacion(pPob);
 	EvaluarPoblacion(pPob);
-	InicializarMejores(pPob);
+	printf("Stop!\n");
+	//InicializarMejores(pPob);
 
-	do
-	{
-		printf("\n--------------------------------\n");
-		printf("Generacion %i: Best=%i\n", It, pPob->idGbest);
-		printf("--------------------------------\n");
-		MostrarPoblacion(pPob);
+	//do
+	//{
+	//	printf("\n--------------------------------\n");
+	//	printf("Generacion %i: Best=%i\n", It, pPob->idGbest);
+	//	printf("--------------------------------\n");
+	//	MostrarPoblacion(pPob);
 
-		do
-		{
-			padre=SeleccionarPoblacion(pPob);
-			madre=SeleccionarPoblacion(pPob);
-		}while(padre==madre);
-		
-		CruzarPoblacion(pPob, padre, madre);
-		MutarPoblacion(pPob, padre, madre);
-		ActualizarMejores(pPob);
-		EvaluarPoblacion(pPob);
-		It++;
-	}while(pPob->pInd[pPob->idGbest].best_fit>0.05 && It<MaximoIteraciones);
+	//	do
+	//	{
+	//		padre=SeleccionarPoblacion(pPob);
+	//		madre=SeleccionarPoblacion(pPob);
+	//	}while(padre==madre);
+	//	
+	//	CruzarPoblacion(pPob, padre, madre);
+	//	MutarPoblacion(pPob, padre, madre);
+	//	ActualizarMejores(pPob);
+	//	EvaluarPoblacion(pPob);
+	//	It++;
+	//}while(pPob->pInd[pPob->idGbest].best_fit>0.05 && It<MaximoIteraciones);
 	
 	/*Liberar espacio en memoria para la poblacion,
 	 * asi como todos sus individuos*/
@@ -250,68 +249,41 @@ int SeleccionarPoblacion(POBLACION *pPob)
 
 void EvaluarPoblacion(POBLACION *pPob)
 {	
-	long double m=0;
-	unsigned int count=0, i, j, k, l;
-	long int max_bit;
-	unsigned int count2=0;
+	unsigned int i, j, k, l=0;
+	int aux_f=0, aux_c=0, files[9]={0}, columns[9]={0};
+
+	/*Evaluacion de la funcion para obtener fitness*/
 	
-	/*Decodificacion de los individuos*/
 	for(i=0; i<Numero_de_Individuos; i++)
-	{
-		for(j=0; j<Numero_de_Genes; j++)
+		for(j=0; j<9; j++)
 		{
-			unsigned char *aux=(unsigned char*)malloc(pPob->BitsPorGen[j]*sizeof(unsigned char));
-            count2=0;
-			for(k=0, l=count2; l<pPob->BitsPorGen[j]+count2; k++, l++)
+			for(k=0; k<9; k++)
 			{
-				aux[k]=pPob->pInd[i].cromosoma[l];
+				aux_f+=(pPob->pInd[i].cromosoma[j*9+k]-'0');
+				aux_c+=(pPob->pInd[i].cromosoma[k*9+j]-'0');
 			}
-			for(k=0; k<pPob->BitsPorGen[j]; k++)
-			{
-				m+=(aux[k]-'0')*(pow(2,((pPob->BitsPorGen[j])-1)-count));
-				count++;
-			}		
-			free(aux);
-			/*Calculo del fenotipo de los individuos*/
-			max_bit=pow(2, pPob->BitsPorGen[j]);
-			pPob->pInd[i].valor[j]=(float)((m/(1.0*max_bit))*LimitSup)+LimitInf;
-			m=0;
-			count=0;
-			count2+=pPob->BitsPorGen[j];
-			//printf("\n\n");
-			pPob->pInd[i].fit+=(pPob->pInd[i].valor[j])*(pPob->pInd[i].valor[j]);
+				files[l]=aux_f;
+				columns[l]=aux_c;
+				aux_c=aux_f=0;
+				l++;	
 		}
-			/*Evaluacion de la funcion para obtener fitness*/
-			//pPob->pInd[i].fit=(50-(pPob->pInd[i].valor[0]-5)*(pPob->pInd[i].valor[0]-5)
-			//		-(pPob->pInd[i].valor[1]-5)*(pPob->pInd[i].valor[1]-5));
-			//pPob->pInd[i].fit=(pPob->pInd[i].valor[0])*(pPob->pInd[i].valor[0])
-			//		+(pPob->pInd[i].valor[1])*(pPob->pInd[i].valor[1]);
-			
-
-	}
-
-	//for(i=0; i<Numero_de_Individuos; i++)
-	//	printf("%f\n", pPob->pInd[i].fit);
-
 }
 
 void InicializarPoblacion(POBLACION *pPob)
 {
 	unsigned int i, j, crom_len;
-	float random;
+	unsigned int random;
 
-	crom_len=LongitudCromosoma(pPob);;
+	crom_len=LongitudCromosoma(pPob);
 	/*Inicializar un valor entre 0 y 1*/	
 	for(i=0; i<Numero_de_Individuos; i++)
 		for(j=0; j<crom_len; j++)
 		{
-			random=((double)rand()/RAND_MAX);
-			if(random < 0.5)
-				pPob->pInd[i].cromosoma[j]='0';
-			else
-				pPob->pInd[i].cromosoma[j]='1';
+			random =(rand()%9)+1;
+			pPob->pInd[i].cromosoma[j]=random+'0';
 		}
-	pPob->pInd[i].fit=0;
+
+	//pPob->pInd[i].fit=0;
 }
 
 POBLACION* CrearPoblacion(const unsigned int Numero_de_Genes, const unsigned int Numero_de_Individuos)
