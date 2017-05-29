@@ -48,7 +48,7 @@ unsigned int LongitudCromosoma(POBLACION *pPob);
 int main()
 {
 	POBLACION *pPob;
-	//unsigned int padre, madre, It=0;
+	unsigned int padre, madre, It=0;
 	/*Se inicializa semilla para generar numeros aleatorios*/
 	//srand(time(NULL));
 
@@ -67,8 +67,8 @@ int main()
 
 	//	//do
 	//	//{
-	//		padre=SeleccionarPoblacion(pPob);
-	//		madre=SeleccionarPoblacion(pPob);
+			padre=SeleccionarPoblacion(pPob);
+			madre=SeleccionarPoblacion(pPob);
 	//	//}while(padre==madre);
 	//	
 	//	CruzarPoblacion(pPob, padre, madre);
@@ -234,15 +234,32 @@ void CruzarPoblacion(POBLACION *pPob, int padre, int madre)
 int SeleccionarPoblacion(POBLACION *pPob)
 {
 	unsigned int i;
-	float f_t=0.0, p_i[Numero_de_Individuos], offset=0.0;
+	float f_t=0.0, p_i[Numero_de_Individuos], offset=0.0, max;
 	float random=rand()/(float)RAND_MAX;
 	int flecha=0;
 
+	/*Localizar best fitness*/
+	max=pPob->pInd[0].fit;
+	for(i=0; i<Numero_de_Individuos; i++)
+	{
+		if(pPob->pInd[i].fit>max)
+			max=pPob->pInd[i].fit;
+	}
+
+	/*Antes*/
 	for(i=0; i<Numero_de_Individuos; i++)
 		f_t=f_t+pPob->pInd[i].fit;
 
 	for(i=0; i<Numero_de_Individuos; i++)
-		p_i[i]=pPob->pInd[i].fit/f_t;
+		p_i[i]=pPob->pInd[i].fit;//f_t;
+
+	/*Despues*/
+	f_t=0.0;
+	for(i=0; i<Numero_de_Individuos; i++)
+		f_t=f_t+(max-pPob->pInd[i].fit);
+
+	for(i=0; i<Numero_de_Individuos; i++)
+		p_i[i]=(max-pPob->pInd[i].fit);//f_t;
 
 	/*Metodo de la ruleta*/
 	for(i=0; i<Numero_de_Individuos; i++)
