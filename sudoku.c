@@ -24,7 +24,7 @@ typedef struct{
 
 /*Variables globales*/
 const unsigned int Numero_de_Genes=1;
-const unsigned int Numero_de_Individuos=50;
+const unsigned int Numero_de_Individuos=10;
 //const float LimitInf=1.0;
 //const float LimitSup=9.0;
 unsigned int MaximoIteraciones=1;
@@ -48,7 +48,7 @@ unsigned int LongitudCromosoma(POBLACION *pPob);
 int main()
 {
 	POBLACION *pPob;
-	unsigned int padre, madre, It=0;
+	//unsigned int padre, madre, It=0;
 	/*Se inicializa semilla para generar numeros aleatorios*/
 	//srand(time(NULL));
 
@@ -56,21 +56,20 @@ int main()
 	pPob=CrearPoblacion(Numero_de_Genes, Numero_de_Individuos);
 	InicializarPoblacion(pPob);
 	EvaluarPoblacion(pPob);
-	printf("Stop!\n");
-	//InicializarMejores(pPob);
+	InicializarMejores(pPob);
 
 	//do
 	//{
 	//	printf("\n--------------------------------\n");
 	//	printf("Generacion %i: Best=%i\n", It, pPob->idGbest);
 	//	printf("--------------------------------\n");
-	//	MostrarPoblacion(pPob);
+		MostrarPoblacion(pPob);
 
-	//	do
-	//	{
+	//	//do
+	//	//{
 	//		padre=SeleccionarPoblacion(pPob);
 	//		madre=SeleccionarPoblacion(pPob);
-	//	}while(padre==madre);
+	//	//}while(padre==madre);
 	//	
 	//	CruzarPoblacion(pPob, padre, madre);
 	//	MutarPoblacion(pPob, padre, madre);
@@ -81,7 +80,7 @@ int main()
 	
 	/*Liberar espacio en memoria para la poblacion,
 	 * asi como todos sus individuos*/
-	EliminarPoblacion(pPob, Numero_de_Individuos);
+	//EliminarPoblacion(pPob, Numero_de_Individuos);
 
 	return 0;
 }
@@ -135,16 +134,28 @@ void InicializarMejores(POBLACION *pPob)
 
 void MostrarPoblacion(POBLACION *pPob)
 {
-	unsigned int i, j, crom_len;
-
-	crom_len=LongitudCromosoma(pPob);
+	unsigned int i, j, k;
 
 	for(i=0; i<Numero_de_Individuos; i++)
 	{
 		printf("Ind[%u]\n", i);
-		for(j=0; j<crom_len; j++)
-			printf("%c", pPob->pInd[i].cromosoma[j]);
-		printf("\n%f\n", pPob->pInd[i].fit);
+		printf("-------------------------------\n");
+		for(j=0; j<9; j++)
+		{	
+			for(k=0; k<9; k++)
+			{
+				if(k==0||k==3||k==6)
+					printf("|");
+				printf(" %c ", pPob->pInd[i].cromosoma[j*9+k]);
+				if(k==8)
+					printf("|");
+
+			}
+			printf("\n");
+			if(j==2||j==5||j==8)
+				printf("-------------------------------\n");
+		}
+		printf("%f\n", pPob->pInd[i].fit);
 	}
 }
 
@@ -241,7 +252,7 @@ int SeleccionarPoblacion(POBLACION *pPob)
 		{
 			flecha=i;
 			//break;
-			return i;
+			return flecha;
 		}
 	}
 	return -1;
@@ -250,23 +261,56 @@ int SeleccionarPoblacion(POBLACION *pPob)
 void EvaluarPoblacion(POBLACION *pPob)
 {	
 	unsigned int i, j, k, l=0;
-	int aux_f=0, aux_c=0, files[9]={0}, columns[9]={0};
+	int sum_f=0, sum_c=0;
+	float pro_f=1.0, pro_c=1.0;
+	unsigned int f_sum[9]={0}, c_sum[9]={0}, f_pro[9]={0}, c_pro[9]={0};
 
 	/*Evaluacion de la funcion para obtener fitness*/
 	
 	for(i=0; i<Numero_de_Individuos; i++)
+	{
 		for(j=0; j<9; j++)
 		{
 			for(k=0; k<9; k++)
 			{
-				aux_f+=(pPob->pInd[i].cromosoma[j*9+k]-'0');
-				aux_c+=(pPob->pInd[i].cromosoma[k*9+j]-'0');
+				sum_f+=(pPob->pInd[i].cromosoma[j*9+k]-'0');
+				pro_f*=(pPob->pInd[i].cromosoma[j*9+k]-'0');
+				sum_c+=(pPob->pInd[i].cromosoma[k*9+j]-'0');
+				pro_c*=(pPob->pInd[i].cromosoma[k*9+j]-'0');
 			}
-				files[l]=aux_f;
-				columns[l]=aux_c;
-				aux_c=aux_f=0;
+				if((45-sum_f)<0)
+					f_sum[l]=(-1)*(45-sum_f);
+				else
+					f_sum[l]=45-sum_f;
+				if((362880.0-pro_f)<0)	
+					f_pro[l]=(-1)*(362880.0-pro_f);
+				else
+					f_pro[l]=362880.0-pro_f;
+				if((45-sum_c)<0)
+					c_sum[l]=(-1)*(45-sum_c);
+				else
+					c_sum[l]=45-sum_c;
+				if((362880.0-pro_c)<0)
+					c_pro[l]=(-1)*(362880.0-pro_c);
+				else
+					c_pro[l]=362880.0-pro_c;
+				sum_c=sum_f=0;
+				pro_c=pro_f=1.0;
 				l++;	
 		}
+		sum_c=sum_f=l=0;
+		pro_c=pro_f=1.0;
+		for(j=0; j<9; j++)
+		{
+			sum_f+=f_sum[j];
+			sum_c+=c_sum[j];
+			pro_f+=sqrt(f_pro[j]);
+			pro_c+=sqrt(c_pro[j]);
+		}
+		pPob->pInd[i].fit=10*(sum_f+sum_c)+pro_f+pro_c;
+		sum_c=sum_f=0;
+		pro_c=pro_f=1.0;
+	}
 }
 
 void InicializarPoblacion(POBLACION *pPob)
