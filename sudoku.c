@@ -11,9 +11,7 @@ Se busca resolver un sudoku.
 //Definicion de la estructura INDIVIDUO
 typedef struct  {
     unsigned char* cromosoma;   //genotipo
-    long double* valor; //fenotipo (convierte el valor bit a decimal)
     float fit;
-	float best_fit;
 }INDIVIDUO;
 
 typedef struct{
@@ -87,7 +85,7 @@ int main()
 	
 	/*Liberar espacio en memoria para la poblacion,
 	 * asi como todos sus individuos*/
-	//EliminarPoblacion(pPob, Numero_de_Individuos);
+	EliminarPoblacion(pPob, Numero_de_Individuos);
 
 	return 0;
 }
@@ -169,7 +167,8 @@ void MostrarPoblacion(POBLACION *pPob)
 
 void MutarPoblacion(POBLACION *pPob, int padre, int madre)
 {
-	unsigned int i, l, count=0, m, n, aux;
+	unsigned int i, j, count=0, aux1;
+	unsigned int rand1, rand2, rand3;
 	float random;
 	random=rand()/(float)RAND_MAX;
 	if(random<p_muta)
@@ -183,10 +182,34 @@ void MutarPoblacion(POBLACION *pPob, int padre, int madre)
 				/*Valor entre 0-8*/
 				do
 				{
-					m=rand()%9;
-					n=rand()%9;
-				}while(m==n);
+					rand1=rand()%9;
+					rand2=rand()%9;
+				}while(rand1==rand2);
 
+				aux1=pPob->pInd[padre].cromosoma[rand1]-'0';
+				pPob->pInd[padre].cromosoma[rand1]=pPob->pInd[padre].cromosoma[rand2];
+				pPob->pInd[padre].cromosoma[rand2]=aux1+'0';
+			}
+			if(random>0.5&&random<0.8)
+			{
+				do
+				{
+					rand1=rand()%9;
+					rand2=rand()%9;
+					rand3=rand()%9;
+				}while(rand1==rand2&&rand1==rand3);
+				
+				aux1=pPob->pInd[padre].cromosoma[rand1]-'0';
+				pPob->pInd[padre].cromosoma[rand1]=pPob->pInd[padre].cromosoma[rand2];
+				pPob->pInd[padre].cromosoma[rand2]=pPob->pInd[padre].cromosoma[rand3];
+				pPob->pInd[padre].cromosoma[rand3]=aux1+'0';
+			}
+			if(random>0.8&&random<1)
+			{
+				aux1=pPob->pInd[padre].cromosoma[8]-'0';
+				for(j=8; j>0; j--)
+					pPob->pInd[padre].cromosoma[j]=pPob->pInd[padre].cromosoma[j-1];
+				pPob->pInd[padre].cromosoma[0]=aux1+'0';
 			}
 		}
 	}
@@ -386,7 +409,6 @@ void EliminarPoblacion(POBLACION *pPob, const unsigned int Numero_de_Individuos)
 	for(i=0; i<Numero_de_Individuos; i++)
 	{
 		free(pPob->pInd[i].cromosoma);
-		free(pPob->pInd[i].valor);
 	}
 	/*Liberar memoria de los individuos*/
 	free(pPob->pInd);
