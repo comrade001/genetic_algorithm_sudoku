@@ -23,17 +23,18 @@ typedef struct{
 }POBLACION;
 
 /*Variables globales*/
-const unsigned int Numero_de_Genes=1;
+const unsigned int Numero_de_Genes=9;
 const unsigned int Numero_de_Individuos=10;
 //const float LimitInf=1.0;
 //const float LimitSup=9.0;
 unsigned int MaximoIteraciones=10;
 const float pc=0.8; 
 const float p_muta=0.12;
-unsigned int Genes[1]={81};
+unsigned int Genes[9]={[0 ... 8]=9};
 
 /*Prototipo de funciones*/
-POBLACION* CrearPoblacion(const unsigned int Numero_de_Genes, const unsigned int Numero_de_Individuos);
+//POBLACION* CrearPoblacion(const unsigned int Numero_de_Genes, const unsigned int Numero_de_Individuos);
+POBLACION* CrearPoblacion(const unsigned int Numero_de_Individuos);
 void InicializarPoblacion(POBLACION *pPob);
 void EvaluarPoblacion(POBLACION *pPob);
 void EliminarPoblacion(POBLACION *pPob, const unsigned int Numero_de_Individuos);
@@ -53,7 +54,7 @@ int main()
 	srand(time(NULL));
 
 	/*Crear memoria para la poblacion*/
-	pPob=CrearPoblacion(Numero_de_Genes, Numero_de_Individuos);
+	pPob=CrearPoblacion(Numero_de_Individuos);
 	InicializarPoblacion(pPob);
 	EvaluarPoblacion(pPob);
 	InicializarMejores(pPob);
@@ -168,13 +169,27 @@ void MostrarPoblacion(POBLACION *pPob)
 
 void MutarPoblacion(POBLACION *pPob, int padre, int madre)
 {
-	unsigned int i, crom_len;
+	unsigned int i, l, count=0, m, n, aux;
 	float random;
-	for(i=0;i<9;i++)
+	random=rand()/(float)RAND_MAX;
+	if(random<p_muta)
 	{
-		
-	}
+		/*Por cada sub-bloque*/
+		for(i=0;i<9;i++)
+		{
+			random=rand()/(float)RAND_MAX;	
+			if(random>0.0&&random<0.5)
+			{
+				/*Valor entre 0-8*/
+				do
+				{
+					m=rand()%9;
+					n=rand()%9;
+				}while(m==n);
 
+			}
+		}
+	}
 }
 
 void CruzarPoblacion(POBLACION *pPob, int padre, int madre)
@@ -331,7 +346,8 @@ void InicializarPoblacion(POBLACION *pPob)
 	//pPob->pInd[i].fit=0;
 }
 
-POBLACION* CrearPoblacion(const unsigned int Numero_de_Genes, const unsigned int Numero_de_Individuos)
+//POBLACION* CrearPoblacion(const unsigned int Numero_de_Genes, const unsigned int Numero_de_Individuos)
+POBLACION* CrearPoblacion(const unsigned int Numero_de_Individuos)
 {
 	POBLACION *pPob;
 	unsigned int i, crom_len;
@@ -357,7 +373,7 @@ POBLACION* CrearPoblacion(const unsigned int Numero_de_Genes, const unsigned int
 	for(i=0; i<Numero_de_Individuos; i++)
 		{
 			pPob->pInd[i].cromosoma=(unsigned char*)malloc(sizeof(unsigned char)*crom_len);
-			pPob->pInd[i].valor=(long double*)malloc(sizeof(long double)*Numero_de_Genes);	
+			//pPob->pInd[i].valor=(long double*)malloc(sizeof(long double)*Numero_de_Genes);	
 		}
 
 	return(pPob);
