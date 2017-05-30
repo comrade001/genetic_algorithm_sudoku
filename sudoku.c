@@ -29,7 +29,7 @@ const unsigned int Numero_de_Individuos=10;
 //const float LimitSup=9.0;
 unsigned int MaximoIteraciones=10;
 const float pc=0.8; 
-const float p_muta=0.001;
+const float p_muta=0.12;
 unsigned int Genes[1]={81};
 
 /*Prototipo de funciones*/
@@ -168,103 +168,60 @@ void MostrarPoblacion(POBLACION *pPob)
 
 void MutarPoblacion(POBLACION *pPob, int padre, int madre)
 {
-	unsigned int j, crom_len;
+	unsigned int i, crom_len;
 	float random;
+	for(i=0;i<9;i++)
+	{
+		
+	}
 
-	crom_len=LongitudCromosoma(pPob);
-	
-	for(j=0; j<(crom_len); j++)
-	{
-		random=((double)rand()/RAND_MAX);
-		if(random<p_muta)
-		{
-			//for(i=0; i<(crom_len); i++)
-			//	printf("%c", pPob->pInd[padre].cromosoma[i]);
-			
-			//printf("\nMuto el bit: %i\n", j);
-			pPob->pInd[padre].cromosoma[j]^=1;
-			
-			//for(i=0; i<(crom_len); i++)
-			//	printf("%c", pPob->pInd[padre].cromosoma[i]);		
-			//printf("\n");
-		}
-	}
-	//printf("\n");
-	
-	for(j=0; j<(crom_len); j++)
-	{
-		random=((double)rand()/RAND_MAX);
-		if(random<p_muta)
-		{
-			//for(i=0; i<(crom_len); i++)
-			//	printf("%c", pPob->pInd[madre].cromosoma[i]);
-			//
-			//printf("\nMuto el bit: %i\n", j);
-			pPob->pInd[madre].cromosoma[j]^=1;
-			
-			//for(i=0; i<(crom_len); i++)
-			//	printf("%c", pPob->pInd[madre].cromosoma[i]);		
-			//printf("\n");
-		}
-	}
 }
 
 void CruzarPoblacion(POBLACION *pPob, int padre, int madre)
 {
-	unsigned int px, crom_len, p_aux;
-	//float random=rand()/(float)RAND_MAX;
+	unsigned int crom_len, p_aux;
+	unsigned int i;
+	float random;
 	
 	crom_len=LongitudCromosoma(pPob);
-
-	if(1)
-	{
-		p_aux=(rand()%9)+1;
-		switch(p_aux)
-		{
-			case 1:
-				px=9;
-				break;
-			case 2:
-				px=18;
-				break;
-			case 3:
-				px=27;
-				break;
-			case 4:
-				px=36;
-				break;
-			case 5:
-				px=45;
-				break;
-			case 6:
-				px=54;
-				break;
-			case 7:
-				px=67;
-				break;
-			default:
-				px=72;
-				break;
-		}
 	
-		unsigned char aux1[crom_len], aux2[crom_len];
-		//printf("px=%i\n", px);
-		memcpy(aux2, pPob->pInd[padre].cromosoma, px*sizeof(unsigned char));
-		memcpy(aux1, pPob->pInd[madre].cromosoma, px*sizeof(unsigned char));
-		memcpy(&aux1[px], &pPob->pInd[padre].cromosoma[px], ((crom_len)-px)*sizeof(unsigned char));
-		memcpy(&aux2[px], &pPob->pInd[madre].cromosoma[px], ((crom_len)-px)*sizeof(unsigned char));
-		
-		memcpy(pPob->pInd[padre].cromosoma, aux1, (crom_len)*sizeof(unsigned char));	
-		memcpy(pPob->pInd[madre].cromosoma, aux2, (crom_len)*sizeof(unsigned char));
-		//printf("%s\t%s\n", aux1, aux2);
-		//unsigned int j;
-		//for(j=0; j<(crom_len); j++)
-		//	printf("%c", pPob->pInd[padre].cromosoma[j]);
-		//printf("\t");
-		//for(j=0; j<(crom_len); j++)
-		//	printf("%c", pPob->pInd[madre].cromosoma[j]);
-		//printf("\n");
-	}		
+	unsigned char aux1[crom_len], aux2[crom_len];
+	//printf("px=%i\n", px);
+	for(i=0; i<crom_len; i++)
+	{
+		random=rand()/(float)RAND_MAX;
+		if(random<0.5)
+			aux1[i]=pPob->pInd[padre].cromosoma[i];
+		else
+			aux1[i]=pPob->pInd[madre].cromosoma[i];
+	}
+
+	for(i=0; i<crom_len; i++)
+	{
+		random=rand()/(float)RAND_MAX;
+		if(random<0.5)
+			aux2[i]=pPob->pInd[padre].cromosoma[i];
+		else
+			aux2[i]=pPob->pInd[madre].cromosoma[i];
+	}
+
+
+
+	//memcpy(aux2, pPob->pInd[padre].cromosoma, px*sizeof(unsigned char));
+	//memcpy(aux1, pPob->pInd[madre].cromosoma, px*sizeof(unsigned char));
+	//memcpy(&aux1[px], &pPob->pInd[padre].cromosoma[px], ((crom_len)-px)*sizeof(unsigned char));
+	//memcpy(&aux2[px], &pPob->pInd[madre].cromosoma[px], ((crom_len)-px)*sizeof(unsigned char));
+	
+	memcpy(pPob->pInd[padre].cromosoma, aux1, (crom_len)*sizeof(unsigned char));	
+	memcpy(pPob->pInd[madre].cromosoma, aux2, (crom_len)*sizeof(unsigned char));
+	//printf("%s\t%s\n", aux1, aux2);
+	//unsigned int j;
+	//for(j=0; j<(crom_len); j++)
+	//	printf("%c", pPob->pInd[padre].cromosoma[j]);
+	//printf("\t");
+	//for(j=0; j<(crom_len); j++)
+	//	printf("%c", pPob->pInd[madre].cromosoma[j]);
+	//printf("\n");
 }
 
 int SeleccionarPoblacion(POBLACION *pPob)
