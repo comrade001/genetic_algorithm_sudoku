@@ -23,7 +23,8 @@ typedef struct{
 /*Variables globales*/
 const unsigned int Numero_de_Genes=9;
 const unsigned int Numero_de_Individuos=5;
-unsigned int MaximoIteraciones=5;
+unsigned int MaximoIteraciones=100+1;
+const float p_cross=0.8;
 const float p_muta=0.12;
 unsigned int Genes[9]={[0 ... 8]=9};
 
@@ -43,7 +44,7 @@ unsigned int LongitudCromosoma(POBLACION *pPob);
 int main()
 {
 	POBLACION *pPob;
-	unsigned int padre, madre, It=0;
+	unsigned int padre, madre, It=1;
 	/*Se inicializa semilla para generar numeros aleatorios*/
 	srand(time(NULL));
 
@@ -59,7 +60,7 @@ int main()
 	MostrarPoblacion(pPob);
 
 
-	while(It<MaximoIteraciones&&pPob->pInd[pPob->idGbest].fit<0.00000001)	
+	while(pPob->pInd[pPob->idGbest].fit>4000.0)	
 	{
 
 	  	padre=SeleccionarPoblacion(pPob);
@@ -103,18 +104,12 @@ void ActualizarMejores(POBLACION *pPob)
 	Best=pPob->pInd[pPob->idGbest].fit;
 	for(i=0; i<Numero_de_Individuos; i++)
 	{
-		//if(pPob->pInd[i].fit < pPob->pInd[i].best_fit)
-		//	pPob->pInd[i].best_fit=pPob->pInd[i].fit;
-	
 		if(pPob->pInd[i].fit < Best)
 		{
 			pPob->idGbest=i;
 			Best=pPob->pInd[i].fit;
 		}
 	}
-
-	//for(i=0; i<Numero_de_Individuos; i++)
-	//	pPob->pInd[i].best_fit=0;
 }
 
 void InicializarMejores(POBLACION *pPob)
@@ -125,7 +120,6 @@ void InicializarMejores(POBLACION *pPob)
 	Best=pPob->pInd[0].fit;
 	for(k=0; k<Numero_de_Individuos; k++)
 	{
-		//pPob->pInd[k].best_fit=pPob->pInd[k].fit;
 		if(pPob->pInd[k].fit < Best)
 		{
 			pPob->idGbest=k;
@@ -207,7 +201,7 @@ void MostrarPoblacion(POBLACION *pPob)
 				printf(" %c ", pPob->pInd[k].cromosoma[i*9+j]);
 			printf("|");
 		}
-		printf("\nFitness[%u]: %.10f\n\n", k, pPob->pInd[i].fit);
+		printf("\nFitness[%u]: %f\n\n", k, pPob->pInd[k].fit);
 	}
 }
 
@@ -286,26 +280,43 @@ void CruzarPoblacion(POBLACION *pPob, int padre, int madre)
 	crom_len=LongitudCromosoma(pPob);
 	
 	unsigned char aux1[crom_len], aux2[crom_len];
-	//printf("px=%i\n", px);
-	for(i=0; i<crom_len; i++)
-	{
-		random=rand()/(float)RAND_MAX;
-		if(random<0.5)
-			aux1[i]=pPob->pInd[padre].cromosoma[i];
-		else
-			aux1[i]=pPob->pInd[madre].cromosoma[i];
-	}
+	random=rand()/(float)RAND_MAX;
 
-	for(i=0; i<crom_len; i++)
+	if(random<p_cross)
 	{
-		random=rand()/(float)RAND_MAX;
-		if(random<0.5)
-			aux2[i]=pPob->pInd[padre].cromosoma[i];
-		else
-			aux2[i]=pPob->pInd[madre].cromosoma[i];
+		/*Crossover Uniforme*/
+		for(i=0; i<9; i++)
+		{
+			random=rand()/(float)RAND_MAX;
+			if(random<0.5)
+			{
+				//aux1[i]=pPob->pInd[padre].cromosoma[i];
+				memcpy(&aux1[i*9], &pPob->pInd[padre].cromosoma[i*9], 9*sizeof(unsigned char));
+			}
+			else
+			{
+				//aux1[i]=pPob->pInd[madre].cromosoma[i];
+				memcpy(&aux1[i*9], &pPob->pInd[madre].cromosoma[i*9], 9*sizeof(unsigned char));
+			}	
+		}
+
+		for(i=0; i<9; i++)
+		{
+			random=rand()/(float)RAND_MAX;
+			if(random<0.5)
+			{
+				//aux1[i]=pPob->pInd[padre].cromosoma[i];
+				memcpy(&aux2[i*9], &pPob->pInd[padre].cromosoma[i*9], 9*sizeof(unsigned char));
+			}
+			else
+			{
+				//aux1[i]=pPob->pInd[madre].cromosoma[i];
+				memcpy(&aux2[i*9], &pPob->pInd[madre].cromosoma[i*9], 9*sizeof(unsigned char));
+			}	
+		}
+		memcpy(pPob->pInd[padre].cromosoma, aux1, (crom_len)*sizeof(unsigned char));	
+		memcpy(pPob->pInd[madre].cromosoma, aux2, (crom_len)*sizeof(unsigned char));
 	}
-	memcpy(pPob->pInd[padre].cromosoma, aux1, (crom_len)*sizeof(unsigned char));	
-	memcpy(pPob->pInd[madre].cromosoma, aux2, (crom_len)*sizeof(unsigned char));
 }
 
 int SeleccionarPoblacion(POBLACION *pPob)
