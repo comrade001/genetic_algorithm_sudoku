@@ -17,6 +17,8 @@ typedef struct  {
 typedef struct{
 	unsigned int idGbest;
 	unsigned int* BitsPorGen;
+	unsigned char* elite;
+	float e_fit;
 	INDIVIDUO* pInd;
 }POBLACION;
 
@@ -44,7 +46,8 @@ unsigned int LongitudCromosoma(POBLACION *pPob);
 int main()
 {
 	POBLACION *pPob;
-	unsigned int padre, madre, It=1;
+	unsigned int padre, madre, It=1, count;
+	float worst;
 	/*Se inicializa semilla para generar numeros aleatorios*/
 	srand(time(NULL));
 
@@ -54,14 +57,22 @@ int main()
 	EvaluarPoblacion(pPob);
 	InicializarMejores(pPob);
 
+	pPob->elite=pPob->pInd[pPob->idGbest].cromosoma;
+	pPob->e_fit=pPob->pInd[pPob->idGbest].fit;
+
 	printf("\n                              \n");
 	printf("Generacion 0: Best=%i\n", pPob->idGbest);
 	printf("                                \n");
 	MostrarPoblacion(pPob);
 
-
-	while(pPob->pInd[pPob->idGbest].fit>4000.0)	
+	while(pPob->e_fit>100.0)	
 	{
+		if(pPob->e_fit>pPob->pInd[pPob->idGbest].fit)
+			{
+				pPob->elite=pPob->pInd[pPob->idGbest].cromosoma;
+				pPob->e_fit=pPob->pInd[pPob->idGbest].fit;
+				printf("\n%f\n",pPob->pInd[pPob->idGbest].fit); 
+			}
 
 	  	padre=SeleccionarPoblacion(pPob);
 	  	madre=SeleccionarPoblacion(pPob);
@@ -69,12 +80,25 @@ int main()
 		CruzarPoblacion(pPob, padre, madre);
 		MutarPoblacion(pPob, padre, madre);
 		EvaluarPoblacion(pPob);
+		count=0;
+		worst=pPob->pInd[0].fit;
+		for(unsigned int i=0; i<Numero_de_Individuos; i++)
+		{
+			if(pPob->pInd[i].fit>worst)
+			{
+				worst=pPob->pInd[i].fit;
+				count=i;
+			}
+		}
+
+		pPob->pInd[count].cromosoma=pPob->elite;
+		pPob->pInd[count].fit=pPob->e_fit;
+
 		ActualizarMejores(pPob);
-		
+
 		printf("\n                              \n");
 		printf("Generacion %i: Best=%i\n", It, pPob->idGbest);
 		printf("                                \n");
-
 	  	MostrarPoblacion(pPob);
 
 		It++;
@@ -217,7 +241,7 @@ void MutarPoblacion(POBLACION *pPob, int padre, int madre)
 		for(i=0, count=0; i<9; i++, count++)
 		{
 			random=rand()/(float)RAND_MAX;	
-			if(random>=0.0&&random<0.5)
+			if(random>=0.0&&random<0.2)
 			{
 				do
 				{
@@ -234,7 +258,7 @@ void MutarPoblacion(POBLACION *pPob, int padre, int madre)
 				pPob->pInd[madre].cromosoma[rand1+count*9]=pPob->pInd[madre].cromosoma[rand2+count*9];
 				pPob->pInd[madre].cromosoma[rand2+count*9]=aux1+'0';
 			}
-			if(random>=0.5&&random<0.8)
+			if(random>=0.2&&random<0.5)
 			{
 				do
 				{
@@ -254,7 +278,7 @@ void MutarPoblacion(POBLACION *pPob, int padre, int madre)
 				pPob->pInd[madre].cromosoma[rand2+count*9]=pPob->pInd[madre].cromosoma[rand3+count*9];
 				pPob->pInd[madre].cromosoma[rand3+count*9]=aux1+'0';
 			}
-			if(random>=0.8&&random<=1.0)
+			if(random>=0.5&&random<=1.0)
 			{
 				/*Insercion*/
 				aux1=pPob->pInd[padre].cromosoma[count*9]-'0';
@@ -289,30 +313,18 @@ void CruzarPoblacion(POBLACION *pPob, int padre, int madre)
 		{
 			random=rand()/(float)RAND_MAX;
 			if(random<0.5)
-			{
-				//aux1[i]=pPob->pInd[padre].cromosoma[i];
 				memcpy(&aux1[i*9], &pPob->pInd[padre].cromosoma[i*9], 9*sizeof(unsigned char));
-			}
 			else
-			{
-				//aux1[i]=pPob->pInd[madre].cromosoma[i];
 				memcpy(&aux1[i*9], &pPob->pInd[madre].cromosoma[i*9], 9*sizeof(unsigned char));
-			}	
 		}
 
 		for(i=0; i<9; i++)
 		{
 			random=rand()/(float)RAND_MAX;
 			if(random<0.5)
-			{
-				//aux1[i]=pPob->pInd[padre].cromosoma[i];
 				memcpy(&aux2[i*9], &pPob->pInd[padre].cromosoma[i*9], 9*sizeof(unsigned char));
-			}
 			else
-			{
-				//aux1[i]=pPob->pInd[madre].cromosoma[i];
 				memcpy(&aux2[i*9], &pPob->pInd[madre].cromosoma[i*9], 9*sizeof(unsigned char));
-			}	
 		}
 		memcpy(pPob->pInd[padre].cromosoma, aux1, (crom_len)*sizeof(unsigned char));	
 		memcpy(pPob->pInd[madre].cromosoma, aux2, (crom_len)*sizeof(unsigned char));
@@ -348,7 +360,6 @@ int SeleccionarPoblacion(POBLACION *pPob)
 		if(random<offset)
 		{
 			flecha=i;
-			//break;
 			return flecha;
 		}
 	}
@@ -357,7 +368,7 @@ int SeleccionarPoblacion(POBLACION *pPob)
 
 void EvaluarPoblacion(POBLACION *pPob)
 {	
-	unsigned int i, j, k, l=0;
+	unsigned int i, j, m, n;
 	int sum_f=0, sum_c=0;
 	float pro_f=1.0, pro_c=1.0;
 	unsigned int f_sum[9]={0}, c_sum[9]={0}, f_pro[9]={0}, c_pro[9]={0};
@@ -366,37 +377,303 @@ void EvaluarPoblacion(POBLACION *pPob)
 	
 	for(i=0; i<Numero_de_Individuos; i++)
 	{
-		for(j=0; j<9; j++)
-		{
-			for(k=0; k<9; k++)
+		/*Fila 1, Columna 1*/
+		for(m=0; m<3; m++)
+			for(n=0; n<3; n++)
 			{
-				sum_f+=(pPob->pInd[i].cromosoma[j*9+k]-'0');
-				pro_f*=(pPob->pInd[i].cromosoma[j*9+k]-'0');
-				sum_c+=(pPob->pInd[i].cromosoma[k*9+j]-'0');
-				pro_c*=(pPob->pInd[i].cromosoma[k*9+j]-'0');
+				sum_f+=pPob->pInd[i].cromosoma[m*9+n]-'0';
+				pro_f*=pPob->pInd[i].cromosoma[m*9+n]-'0';
 			}
-				if((45-sum_f)<0)
-					f_sum[l]=(-1)*(45-sum_f);
-				else
-					f_sum[l]=45-sum_f;
-				if((362880.0-pro_f)<0)	
-					f_pro[l]=(-1)*(362880.0-pro_f);
-				else
-					f_pro[l]=362880.0-pro_f;
-				if((45-sum_c)<0)
-					c_sum[l]=(-1)*(45-sum_c);
-				else
-					c_sum[l]=45-sum_c;
-				if((362880.0-pro_c)<0)
-					c_pro[l]=(-1)*(362880.0-pro_c);
-				else
-					c_pro[l]=362880.0-pro_c;
-				sum_c=sum_f=0;
-				pro_c=pro_f=1.0;
-				l++;	
-		}
-		sum_c=sum_f=l=0;
+		for(m=0; m<7; m+=3)
+			for(n=0; n<7; n+=3)
+			{
+				sum_c+=pPob->pInd[i].cromosoma[m*9+n]-'0';
+				pro_c*=pPob->pInd[i].cromosoma[m*9+n]-'0';
+			}
+		if((45-sum_f)<0)
+			f_sum[0]=(-1)*(45-sum_f);
+		else
+			f_sum[0]=45-sum_f;
+		if((362880.0-pro_f)<0)	
+			f_pro[0]=(-1)*(362880.0-pro_f);
+		else
+			f_pro[0]=362880.0-pro_f;
+		if((45-sum_c)<0)
+			c_sum[0]=(-1)*(45-sum_c);
+		else
+			c_sum[0]=45-sum_c;
+		if((362880.0-pro_c)<0)
+			c_pro[0]=(-1)*(362880.0-pro_c);
+		else
+			c_pro[0]=362880.0-pro_c;
+
+		sum_c=sum_f=0;
 		pro_c=pro_f=1.0;
+		
+		/*Fila 2, Columna 2*/
+		for(m=0; m<3; m++)
+			for(n=3; n<6; n++)
+			{
+				sum_f+=pPob->pInd[i].cromosoma[m*9+n]-'0';
+				pro_f*=pPob->pInd[i].cromosoma[m*9+n]-'0';
+			}
+		for(m=0; m<7; m+=3)
+			for(n=1; n<8; n+=3)
+			{
+				sum_c+=pPob->pInd[i].cromosoma[m*9+n]-'0';
+				pro_c*=pPob->pInd[i].cromosoma[m*9+n]-'0';
+			}
+		if((45-sum_f)<0)
+			f_sum[1]=(-1)*(45-sum_f);
+		else
+			f_sum[1]=45-sum_f;
+		if((362880.0-pro_f)<0)	
+			f_pro[1]=(-1)*(362880.0-pro_f);
+		else
+			f_pro[1]=362880.0-pro_f;
+		if((45-sum_c)<0)
+			c_sum[1]=(-1)*(45-sum_c);
+		else
+			c_sum[1]=45-sum_c;
+		if((362880.0-pro_c)<0)
+			c_pro[1]=(-1)*(362880.0-pro_c);
+		else
+			c_pro[1]=362880.0-pro_c;
+
+		sum_c=sum_f=0;
+		pro_c=pro_f=1.0;
+
+		/*Fila 3, Columna 3*/
+		for(m=0; m<3; m++)
+			for(n=6; n<9; n++)
+			{
+				sum_f+=pPob->pInd[i].cromosoma[m*9+n]-'0';
+				pro_f*=pPob->pInd[i].cromosoma[m*9+n]-'0';
+			}
+		for(m=0; m<7; m+=3)
+			for(n=2; n<9; n+=3)
+			{
+				sum_c+=pPob->pInd[i].cromosoma[m*9+n]-'0';
+				pro_c*=pPob->pInd[i].cromosoma[m*9+n]-'0';
+			}
+		if((45-sum_f)<0)
+			f_sum[2]=(-1)*(45-sum_f);
+		else
+			f_sum[2]=45-sum_f;
+		if((362880.0-pro_f)<0)	
+			f_pro[2]=(-1)*(362880.0-pro_f);
+		else
+			f_pro[2]=362880.0-pro_f;
+		if((45-sum_c)<0)
+			c_sum[2]=(-1)*(45-sum_c);
+		else
+			c_sum[2]=45-sum_c;
+		if((362880.0-pro_c)<0)
+			c_pro[2]=(-1)*(362880.0-pro_c);
+		else
+			c_pro[2]=362880.0-pro_c;
+
+		sum_c=sum_f=0;
+		pro_c=pro_f=1.0;
+
+		/*Fila 4, Columna 4*/
+		for(m=0; m<3; m++)
+			for(n=27; n<30; n++)
+			{
+				sum_f+=pPob->pInd[i].cromosoma[m*9+n]-'0';
+				pro_f*=pPob->pInd[i].cromosoma[m*9+n]-'0';
+			}
+		for(m=0; m<7; m+=3)
+			for(n=9; n<16; n+=3)
+			{
+				sum_c+=pPob->pInd[i].cromosoma[m*9+n]-'0';
+				pro_c*=pPob->pInd[i].cromosoma[m*9+n]-'0';
+			}
+		if((45-sum_f)<0)
+			f_sum[3]=(-1)*(45-sum_f);
+		else
+			f_sum[3]=45-sum_f;
+		if((362880.0-pro_f)<0)	
+			f_pro[3]=(-1)*(362880.0-pro_f);
+		else
+			f_pro[3]=362880.0-pro_f;
+		if((45-sum_c)<0)
+			c_sum[3]=(-1)*(45-sum_c);
+		else
+			c_sum[3]=45-sum_c;
+		if((362880.0-pro_c)<0)
+			c_pro[3]=(-1)*(362880.0-pro_c);
+		else
+			c_pro[3]=362880.0-pro_c;
+
+		sum_c=sum_f=0;
+		pro_c=pro_f=1.0;
+
+		/*Fila 5, Columna 5*/
+		for(m=0; m<3; m++)
+			for(n=30; n<33; n++)
+			{
+				sum_f+=pPob->pInd[i].cromosoma[m*9+n]-'0';
+				pro_f*=pPob->pInd[i].cromosoma[m*9+n]-'0';
+			}
+		for(m=0; m<7; m+=3)
+			for(n=10; n<17; n+=3)
+			{
+				sum_c+=pPob->pInd[i].cromosoma[m*9+n]-'0';
+				pro_c*=pPob->pInd[i].cromosoma[m*9+n]-'0';
+			}
+		if((45-sum_f)<0)
+			f_sum[4]=(-1)*(45-sum_f);
+		else
+			f_sum[4]=45-sum_f;
+		if((362880.0-pro_f)<0)	
+			f_pro[4]=(-1)*(362880.0-pro_f);
+		else
+			f_pro[4]=362880.0-pro_f;
+		if((45-sum_c)<0)
+			c_sum[4]=(-1)*(45-sum_c);
+		else
+			c_sum[4]=45-sum_c;
+		if((362880.0-pro_c)<0)
+			c_pro[4]=(-1)*(362880.0-pro_c);
+		else
+			c_pro[4]=362880.0-pro_c;
+
+		sum_c=sum_f=0;
+		pro_c=pro_f=1.0;
+
+		/*Fila 6, Columna 6*/
+		for(m=0; m<3; m++)
+			for(n=33; n<36; n++)
+			{
+				sum_f+=pPob->pInd[i].cromosoma[m*9+n]-'0';
+				pro_f*=pPob->pInd[i].cromosoma[m*9+n]-'0';
+			}
+		for(m=0; m<7; m+=3)
+			for(n=11; n<18; n+=3)
+			{
+				sum_c+=pPob->pInd[i].cromosoma[m*9+n]-'0';
+				pro_c*=pPob->pInd[i].cromosoma[m*9+n]-'0';
+			}
+		if((45-sum_f)<0)
+			f_sum[5]=(-1)*(45-sum_f);
+		else
+			f_sum[5]=45-sum_f;
+		if((362880.0-pro_f)<0)	
+			f_pro[5]=(-1)*(362880.0-pro_f);
+		else
+			f_pro[5]=362880.0-pro_f;
+		if((45-sum_c)<0)
+			c_sum[5]=(-1)*(45-sum_c);
+		else
+			c_sum[5]=45-sum_c;
+		if((362880.0-pro_c)<0)
+			c_pro[5]=(-1)*(362880.0-pro_c);
+		else
+			c_pro[5]=362880.0-pro_c;
+
+		sum_c=sum_f=0;
+		pro_c=pro_f=1.0;
+
+		/*Fila 7, Columna 7*/
+		for(m=0; m<3; m++)
+			for(n=54; n<57; n++)
+			{
+				sum_f+=pPob->pInd[i].cromosoma[m*9+n]-'0';
+				pro_f*=pPob->pInd[i].cromosoma[m*9+n]-'0';
+			}
+		for(m=0; m<7; m+=3)
+			for(n=18; n<25; n+=3)
+			{
+				sum_c+=pPob->pInd[i].cromosoma[m*9+n]-'0';
+				pro_c*=pPob->pInd[i].cromosoma[m*9+n]-'0';
+			}
+		if((45-sum_f)<0)
+			f_sum[6]=(-1)*(45-sum_f);
+		else
+			f_sum[6]=45-sum_f;
+		if((362880.0-pro_f)<0)	
+			f_pro[6]=(-1)*(362880.0-pro_f);
+		else
+			f_pro[6]=362880.0-pro_f;
+		if((45-sum_c)<0)
+			c_sum[6]=(-1)*(45-sum_c);
+		else
+			c_sum[6]=45-sum_c;
+		if((362880.0-pro_c)<0)
+			c_pro[6]=(-1)*(362880.0-pro_c);
+		else
+			c_pro[6]=362880.0-pro_c;
+
+		sum_c=sum_f=0;
+		pro_c=pro_f=1.0;
+
+		/*Fila 8, Columna 8*/
+		for(m=0; m<3; m++)
+			for(n=57; n<60; n++)
+			{
+				sum_f+=pPob->pInd[i].cromosoma[m*9+n]-'0';
+				pro_f*=pPob->pInd[i].cromosoma[m*9+n]-'0';
+			}
+		for(m=0; m<7; m+=3)
+			for(n=19; n<26; n+=3)
+			{
+				sum_c+=pPob->pInd[i].cromosoma[m*9+n]-'0';
+				pro_c*=pPob->pInd[i].cromosoma[m*9+n]-'0';
+			}
+		if((45-sum_f)<0)
+			f_sum[7]=(-1)*(45-sum_f);
+		else
+			f_sum[7]=45-sum_f;
+		if((362880.0-pro_f)<0)	
+			f_pro[7]=(-1)*(362880.0-pro_f);
+		else
+			f_pro[7]=362880.0-pro_f;
+		if((45-sum_c)<0)
+			c_sum[7]=(-1)*(45-sum_c);
+		else
+			c_sum[7]=45-sum_c;
+		if((362880.0-pro_c)<0)
+			c_pro[7]=(-1)*(362880.0-pro_c);
+		else
+			c_pro[7]=362880.0-pro_c;
+
+		sum_c=sum_f=0;
+		pro_c=pro_f=1.0;
+
+		/*Fila 9, Columna 9*/
+		for(m=0; m<3; m++)
+			for(n=60; n<63; n++)
+			{
+				sum_f+=pPob->pInd[i].cromosoma[m*9+n]-'0';
+				pro_f*=pPob->pInd[i].cromosoma[m*9+n]-'0';
+			}
+		for(m=0; m<7; m+=3)
+			for(n=20; n<27; n+=3)
+			{
+				sum_c+=pPob->pInd[i].cromosoma[m*9+n]-'0';
+				pro_c*=pPob->pInd[i].cromosoma[m*9+n]-'0';
+			}
+		if((45-sum_f)<0)
+			f_sum[8]=(-1)*(45-sum_f);
+		else
+			f_sum[8]=45-sum_f;
+		if((362880.0-pro_f)<0)	
+			f_pro[8]=(-1)*(362880.0-pro_f);
+		else
+			f_pro[8]=362880.0-pro_f;
+		if((45-sum_c)<0)
+			c_sum[8]=(-1)*(45-sum_c);
+		else
+			c_sum[8]=45-sum_c;
+		if((362880.0-pro_c)<0)
+			c_pro[8]=(-1)*(362880.0-pro_c);
+		else
+			c_pro[8]=362880.0-pro_c;
+
+		sum_c=sum_f=0;
+		pro_c=pro_f=1.0;
+
 		for(j=0; j<9; j++)
 		{
 			sum_f+=f_sum[j];
@@ -405,8 +682,6 @@ void EvaluarPoblacion(POBLACION *pPob)
 			pro_c+=sqrt(c_pro[j]);
 		}
 		pPob->pInd[i].fit=10*(sum_f+sum_c)+pro_f+pro_c;
-		sum_c=sum_f=0;
-		pro_c=pro_f=1.0;
 	}
 }
 
@@ -434,15 +709,8 @@ void InicializarPoblacion(POBLACION *pPob)
 				pPob->pInd[i].cromosoma[count*9+k]=numbers[k]+'0';
 		}
 	}
-	//for(i=0; i<Numero_de_Individuos; i++)
- 	//	for(j=0; j<81; j++)
- 	//	{
- 	//		random =(rand()%9)+1;
- 	//		pPob->pInd[i].cromosoma[j]=random+'0';
- 	//	}
 }
 
-//POBLACION* CrearPoblacion(const unsigned int Numero_de_Genes, const unsigned int Numero_de_Individuos)
 POBLACION* CrearPoblacion(const unsigned int Numero_de_Individuos)
 {
 	POBLACION *pPob;
@@ -454,10 +722,8 @@ POBLACION* CrearPoblacion(const unsigned int Numero_de_Individuos)
 		printf("Error en memoria\n");
 		exit(0);
 	}
-	
 	/*Asignar memoria a la estructura Individuo*/
 	pPob->pInd=(INDIVIDUO*)malloc(sizeof(INDIVIDUO)*Numero_de_Individuos);
-	//pPob->BitsPorGen=(unsigned int*)malloc(sizeof(unsigned int)*Numero_de_Genes);
 	pPob->BitsPorGen=Genes;
 	if(pPob->pInd == NULL)
 	{
@@ -466,11 +732,9 @@ POBLACION* CrearPoblacion(const unsigned int Numero_de_Individuos)
 	}
 
 	crom_len=LongitudCromosoma(pPob);
+	pPob->elite=(unsigned char*)malloc(sizeof(unsigned char)*crom_len);
 	for(i=0; i<Numero_de_Individuos; i++)
-		{
-			pPob->pInd[i].cromosoma=(unsigned char*)malloc(sizeof(unsigned char)*crom_len);
-			//pPob->pInd[i].valor=(long double*)malloc(sizeof(long double)*Numero_de_Genes);	
-		}
+		pPob->pInd[i].cromosoma=(unsigned char*)malloc(sizeof(unsigned char)*crom_len);
 
 	return(pPob);
 }
@@ -485,7 +749,7 @@ void EliminarPoblacion(POBLACION *pPob, const unsigned int Numero_de_Individuos)
 	}
 	/*Liberar memoria de los individuos*/
 	free(pPob->pInd);
-	//free(pPob->BitsPorGen);
+	free(pPob->elite);
 	/*Liberar memoria de la poblacion*/
 	free(pPob);
 }
