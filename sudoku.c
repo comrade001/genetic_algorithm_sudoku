@@ -8,17 +8,17 @@ Se busca resolver un sudoku.
 #include <string.h>
 #include <time.h>
 
-//Definicion de la estructura INDIVIDUO
+/*Definicion de la estructura INDIVIDUO*/
 typedef struct  {
-    unsigned char* cromosoma;   //genotipo
-    float fit;
+    unsigned char* cromosoma;   //Genotipo
+    float fit;					//Fitness
 }INDIVIDUO;
 
 typedef struct{
-	unsigned int idGbest;
-	unsigned int* BitsPorGen;
-	unsigned char* elite;
-	float e_fit;
+	unsigned int idGbest;		//Id Best Global
+	unsigned int* BitsPorGen;	//No. Bits por Gen
+	unsigned char* elite;		//Cromosoma Ind Elite
+	float e_fit;				//Fitness Ind Elite
 	INDIVIDUO* pInd;
 }POBLACION;
 
@@ -48,40 +48,52 @@ int main()
 	POBLACION *pPob;
 	unsigned int padre, madre, It=1, count;
 	float worst;
-	/*Se inicializa semilla para generar numeros aleatorios*/
+	/*Semilla aleatoria*/
 	srand(time(NULL));
 
 	/*Crear memoria para la poblacion*/
 	pPob=CrearPoblacion(Numero_de_Individuos);
+	/*Inicializacion de los individuos*/
 	InicializarPoblacion(pPob);
+	/*Evaluacion de la funcion Fitness*/
 	EvaluarPoblacion(pPob);
+	/*Inicializacion de los mejores individuos*/
 	InicializarMejores(pPob);
 
+	/*Se incializa el Ind Elite*/
 	pPob->elite=pPob->pInd[pPob->idGbest].cromosoma;
 	pPob->e_fit=pPob->pInd[pPob->idGbest].fit;
 
 	printf("\n                              \n");
 	printf("Generacion 0: Best=%i\n", pPob->idGbest);
 	printf("                                \n");
+	/*Mostrar poblacion*/
 	MostrarPoblacion(pPob);
 
 	while(pPob->e_fit>100.0)	
 	{
 		if(pPob->e_fit>pPob->pInd[pPob->idGbest].fit)
 			{
+				/*Actualizacion del Ind Elite*/
 				pPob->elite=pPob->pInd[pPob->idGbest].cromosoma;
 				pPob->e_fit=pPob->pInd[pPob->idGbest].fit;
 				printf("\n%f\n",pPob->pInd[pPob->idGbest].fit); 
 			}
 
+		/*Seleccion del padre y la madre*/
 	  	padre=SeleccionarPoblacion(pPob);
 	  	madre=SeleccionarPoblacion(pPob);
 		
+		/*Proceso de gestacion de los indiviudos*/
 		CruzarPoblacion(pPob, padre, madre);
 		MutarPoblacion(pPob, padre, madre);
+		
+		/*Evaluacion de la funcion Fitness*/
 		EvaluarPoblacion(pPob);
 		count=0;
 		worst=pPob->pInd[0].fit;
+
+		/*Se localiza al peor individuos*/
 		for(unsigned int i=0; i<Numero_de_Individuos; i++)
 		{
 			if(pPob->pInd[i].fit>worst)
@@ -90,15 +102,17 @@ int main()
 				count=i;
 			}
 		}
-
+		/*Se sustituye al peor individuo con el Elite*/
 		pPob->pInd[count].cromosoma=pPob->elite;
 		pPob->pInd[count].fit=pPob->e_fit;
 
+		/*Actualizacion del mejor individuo*/
 		ActualizarMejores(pPob);
 
 		printf("\n                              \n");
 		printf("Generacion %i: Best=%i\n", It, pPob->idGbest);
 		printf("                                \n");
+		/*Monstrar poblacion*/
 	  	MostrarPoblacion(pPob);
 
 		It++;
@@ -114,7 +128,7 @@ int main()
 unsigned int LongitudCromosoma(POBLACION *pPob)
 {
 	unsigned int i, crom_len=0;
-	/*Longitud del cormosoma*/
+	/*Longitud del cromosoma*/
 	for(i=0; i<Numero_de_Genes; i++)
 		crom_len+=pPob->BitsPorGen[i];
 
@@ -156,6 +170,7 @@ void MostrarPoblacion(POBLACION *pPob)
 {
 	unsigned int i, j, k;
 
+	/*Por cada individuo*/
 	for(k=0; k<Numero_de_Individuos; k++)
 	{
 		printf("Ind[%u]\n", k);
@@ -681,6 +696,7 @@ void EvaluarPoblacion(POBLACION *pPob)
 			pro_f+=sqrt(f_pro[j]);
 			pro_c+=sqrt(c_pro[j]);
 		}
+		/*Funcion Fitness*/
 		pPob->pInd[i].fit=10*(sum_f+sum_c)+pro_f+pro_c;
 	}
 }
@@ -690,9 +706,12 @@ void InicializarPoblacion(POBLACION *pPob)
 	unsigned int i, j, k, aux, count;
 	unsigned int random, numbers[9]={0};
 
+	/*Se llena el arreglo con valores del 1-9
+	 * de forma continua*/
 	for(i=0; i<9; i++)
 		numbers[i]=i+1;
 
+	/*Se mezcla el arreglo recien creado*/
 	for(i=0; i<Numero_de_Individuos; i++)
 	{
 		for(j=0, count=0; j<9; j++, count++)
